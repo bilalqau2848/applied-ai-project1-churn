@@ -100,8 +100,9 @@ with st.sidebar:
     dependents = st.checkbox("Has dependents")
 
   st.divider()
+  default_threshold = float(meta.get("threshold", 0.5))
   threshold = st.slider(
-      "Contact threshold", 0.05, 0.95, float(meta["threshold"]), 0.05
+      "Contact threshold", 0.05, 0.95, default_threshold, 0.05
   )
 
   row = {
@@ -133,9 +134,15 @@ with st.sidebar:
 
 # Main Area Layout
 st.title("Customer Churn Risk Advisor")
+
+# Safe keys extraction using .get() to prevent KeyErrors
+model_name = meta.get("model_name", "ML Model")
+cv_auc = meta.get("cv_auc", 0.0)
+cv_auc_std = meta.get("cv_auc_std", 0.0)
+
 st.caption(
-    f"{meta['model_name']} | CV AUC {meta['cv_auc']:.3f} +/-"
-    f" {meta['cv_auc_std']:.3f} | Decision support only"
+    f"{model_name} | CV AUC {cv_auc:.3f} +/- {cv_auc_std:.3f} | Decision support"
+    " only"
 )
 
 tab1, tab2, tab3 = st.tabs(["One customer", "Batch scoring", "About"])
@@ -182,9 +189,9 @@ with tab1:
     with st.expander("Why this score? (Logistic Regression)"):
       z = model[:-1].transform(prepare_input(customer, COLS))[0]
       contrib = pd.Series(final.coef_[0] * z, index=COLS)
-      top = contrib.reindex(contrib.abs().sort_values(ascending=False).index).head(
-          8
-      )
+      top = contrib.reindex(
+          contrib.abs().sort_values(ascending=False).index
+      ).head(8)
       st.bar_chart(top)
       st.caption("Positive bars push toward churn, negative away.")
 
