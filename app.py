@@ -19,7 +19,7 @@ model, meta, sample_df = load_artifacts()
 
 col1, col2, col3 = st.columns(3)
 col1.metric("Model", meta['model_name'])
-col2.metric("AUC", meta['metrics']['auc'])
+col2.metric("AUC", meta.get('metrics', {}).get('auc', 0.0))
 col3.metric("Threshold", meta['threshold'])
 
 st.divider()
